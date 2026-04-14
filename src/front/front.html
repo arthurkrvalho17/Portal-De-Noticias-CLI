@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal de Notícias</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #0a1f44;
+    --navy-light: #1a3666;
+    --navy-mid: #12295a;
+    --navy-pale: #e8eef8;
+    --navy-border: #c5d3ec;
+    --white: #ffffff;
+    --text-dark: #0a1f44;
+    --text-mid: #3a5080;
+    --text-muted: #7a90b8;
+    --danger: #c0392b;
+    --success: #1a6640;
+    --success-bg: #e8f5ee;
+    --tag-bg: #dce8f7;
+    --tag-text: #0a3166;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f0f4fb;
+    color: var(--text-dark);
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--navy);
+    color: var(--white);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    border-bottom: 3px solid var(--navy-light);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--white);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .logo-icon svg { display: block; }
+
+  nav {
+    display: flex;
+    gap: 4px;
+  }
+
+  nav button {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.75);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+
+  nav button:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  nav button.active { background: rgba(255,255,255,0.18); color: #fff; font-weight: 500; }
+
+  .main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  .page { display: none; }
+  .page.visible { display: block; }
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .page-title { font-size: 22px; font-weight: 600; color: var(--navy); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-primary { background: var(--navy); color: #fff; }
+  .btn-primary:hover { background: var(--navy-light); }
+
+  .btn-outline {
+    background: var(--white);
+    color: var(--navy);
+    border: 1.5px solid var(--navy-border);
+  }
+  .btn-outline:hover { background: var(--navy-pale); }
+
+  .btn-danger { background: var(--danger); color: #fff; }
+
+  .controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+
+  select, input[type="text"], input[type="date"], textarea {
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text-dark);
+    background: var(--white);
+    border: 1.5px solid var(--navy-border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  select:focus, input:focus, textarea:focus { border-color: var(--navy); }
+
+  textarea { resize: vertical; min-height: 100px; width: 100%; }
+
+  .news-grid {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .card {
+    background: var(--white);
+    border: 1.5px solid var(--navy-border);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    transition: box-shadow 0.15s, border-color 0.15s;
+  }
+  .card:hover { border-color: var(--navy); }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    display: inline-block;
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+
+  .tag-uf {
+    background: var(--navy);
+    color: #fff;
+  }
+
+  .card-date {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-left: auto;
+  }
+
+  .card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+
+  .card-text {
+    font-size: 14px;
+    color: var(--text-mid);
+    line-height: 1.6;
+  }
+
+  .card-text.collapsed {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .read-more {
+    background: none;
+    border: none;
+    color: var(--navy-light);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 0;
+    margin-top: 4px;
+  }
+  .read-more:hover { text-decoration: underline; }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+  }
+
+  .empty-state svg { margin-bottom: 1rem; opacity: 0.4; }
+  .empty-state p { font-size: 15px; }
+
+  .section-group { margin-bottom: 2rem; }
+
+  .section-group-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--white);
+    background: var(--navy);
+    padding: 6px 14px;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    width: fit-content;
+  }
+
+  .form-card {
+    background: var(--white);
+    border: 1.5px solid var(--navy-border);
+    border-radius: 12px;
+    padding: 1.75rem;
+    max-width: 560px;
+  }
+
+  .form-group { margin-bottom: 1.25rem; }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-mid);
+    margin-bottom: 6px;
+  }
+
+  .form-group input[type="text"],
+  .form-group select,
+  .form-group textarea { width: 100%; }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    background: var(--navy);
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    z-index: 999;
+    max-width: 320px;
+  }
+
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { background: var(--success); }
+  .toast.error { background: var(--danger); }
+
+  .stat-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: var(--white);
+    border: 1.5px solid var(--navy-border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+  }
+
+  .stat-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+  .stat-value { font-size: 24px; font-weight: 600; color: var(--navy); }
+
+  .badge-count {
+    background: var(--navy-pale);
+    color: var(--navy);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+
+  @media (max-width: 600px) {
+    nav button span { display: none; }
+    .form-row { grid-template-columns: 1fr; }
+    header { padding: 0 1rem; }
+    .main { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <rect x="1" y="1" width="7" height="7" rx="1.5" fill="#0a1f44"/>
+        <rect x="10" y="1" width="7" height="7" rx="1.5" fill="#0a1f44"/>
+        <rect x="1" y="10" width="7" height="7" rx="1.5" fill="#0a1f44"/>
+        <rect x="10" y="10" width="7" height="3" rx="1.5" fill="#0a1f44"/>
+        <rect x="10" y="14" width="7" height="3" rx="1.5" fill="#0a1f44"/>
+      </svg>
+    </div>
+    Portal de Notícias
+  </div>
+  <nav>
+    <button class="active" onclick="showPage('noticias', this)">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="margin-right:4px"><path d="M2 3h12v2H2zm0 4h12v1H2zm0 3h8v1H2z"/></svg>
+      <span>Notícias</span>
+    </button>
+    <button onclick="showPage('estados', this)">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="margin-right:4px"><path d="M8 1a5 5 0 100 10A5 5 0 008 1zm0 1.5a3.5 3.5 0 110 7 3.5 3.5 0 010-7zM3 13.5h10v1H3z"/></svg>
+      <span>Estados</span>
+    </button>
+    <button onclick="showPage('cidades', this)">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="margin-right:4px"><path d="M6 1v1H4v12h8V2h-2V1H6zm1 1h2v1h1v10H6V3h1V2z"/></svg>
+      <span>Cidades</span>
+    </button>
+    <button onclick="showPage('cadastrar', this)">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="margin-right:4px"><path d="M7.5 2v5.5H2v1h5.5V14h1V8.5H14v-1H8.5V2z"/></svg>
+      <span>Nova Notícia</span>
+    </button>
+  </nav>
+</header>
+
+<div class="main">
+
+  <!-- NOTÍCIAS -->
+  <div id="page-noticias" class="page visible">
+    <div class="page-header">
+      <div class="page-title">Todas as notícias</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <select id="filter-uf" onchange="renderNoticias()">
+          <option value="">Todos os estados</option>
+        </select>
+        <select id="filter-order" onchange="renderNoticias()">
+          <option value="recente">Mais recentes primeiro</option>
+          <option value="antiga">Mais antigas primeiro</option>
+        </select>
+        <select id="filter-group" onchange="renderNoticias()">
+          <option value="lista">Lista</option>
+          <option value="agrupado">Agrupado por estado</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="stat-bar" id="stat-bar"></div>
+    <div class="news-grid" id="news-list"></div>
+  </div>
+
+  <!-- ESTADOS -->
+  <div id="page-estados" class="page">
+    <div class="page-header">
+      <div class="page-title">Estados (UFs)</div>
+      <button class="btn btn-primary" onclick="showPage('form-uf', null)">+ Cadastrar UF</button>
+    </div>
+    <div id="uf-list" class="news-grid"></div>
+  </div>
+
+  <!-- CIDADES -->
+  <div id="page-cidades" class="page">
+    <div class="page-header">
+      <div class="page-title">Cidades</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="filter-cidades-uf" onchange="renderCidades()">
+          <option value="">Todos os estados</option>
+        </select>
+        <button class="btn btn-primary" onclick="showPage('form-cidade', null)">+ Cadastrar cidade</button>
+      </div>
+    </div>
+    <div id="cidade-list" class="news-grid"></div>
+  </div>
+
+  <!-- FORM NOVA NOTÍCIA -->
+  <div id="page-cadastrar" class="page">
+    <div class="page-header">
+      <div class="page-title">Nova notícia</div>
+      <button class="btn btn-outline" onclick="showPage('noticias', document.querySelector('nav button'))">← Voltar</button>
+    </div>
+    <div class="form-card">
+      <div class="form-group">
+        <label>Cidade</label>
+        <select id="noticia-cidade"></select>
+      </div>
+      <div class="form-group">
+        <label>Título</label>
+        <input type="text" id="noticia-titulo" placeholder="Digite o título da notícia">
+      </div>
+      <div class="form-group">
+        <label>Texto</label>
+        <textarea id="noticia-texto" placeholder="Digite o conteúdo da notícia..."></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="salvarNoticia()">Publicar notícia</button>
+    </div>
+  </div>
+
+  <!-- FORM NOVA UF -->
+  <div id="page-form-uf" class="page">
+    <div class="page-header">
+      <div class="page-title">Cadastrar UF</div>
+      <button class="btn btn-outline" onclick="showPage('estados', null)">← Voltar</button>
+    </div>
+    <div class="form-card">
+      <div class="form-group">
+        <label>Nome do estado</label>
+        <input type="text" id="uf-nome" placeholder="Ex: São Paulo">
+      </div>
+      <div class="form-group">
+        <label>Sigla</label>
+        <input type="text" id="uf-sigla" placeholder="Ex: SP" maxlength="2" style="text-transform:uppercase">
+      </div>
+      <button class="btn btn-primary" onclick="salvarUF()">Cadastrar UF</button>
+    </div>
+  </div>
+
+  <!-- FORM NOVA CIDADE -->
+  <div id="page-form-cidade" class="page">
+    <div class="page-header">
+      <div class="page-title">Cadastrar cidade</div>
+      <button class="btn btn-outline" onclick="showPage('cidades', null)">← Voltar</button>
+    </div>
+    <div class="form-card">
+      <div class="form-group">
+        <label>Estado (UF)</label>
+        <select id="cidade-uf"></select>
+      </div>
+      <div class="form-group">
+        <label>Nome da cidade</label>
+        <input type="text" id="cidade-nome" placeholder="Ex: Campinas">
+      </div>
+      <button class="btn btn-primary" onclick="salvarCidade()">Cadastrar cidade</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let data = JSON.parse(localStorage.getItem('newsdb') || 'null') || {
+  ufs: [
+    { id: 1, nome: 'São Paulo', sigla: 'SP' },
+    { id: 2, nome: 'Rio de Janeiro', sigla: 'RJ' },
+    { id: 3, nome: 'Minas Gerais', sigla: 'MG' }
+  ],
+  cidades: [
+    { id: 1, nome: 'São Paulo', uf_id: 1 },
+    { id: 2, nome: 'Campinas', uf_id: 1 },
+    { id: 3, nome: 'Rio de Janeiro', uf_id: 2 },
+    { id: 4, nome: 'Belo Horizonte', uf_id: 3 }
+  ],
+  noticias: [
+    { id: 1, titulo: 'Nova linha de metrô inaugurada', texto: 'A prefeitura anunciou a inauguração de uma nova linha de metrô que vai conectar a zona norte ao centro da cidade, beneficiando mais de 500 mil passageiros diariamente. As obras levaram três anos para serem concluídas.', cidade_id: 1, data_criacao: '2025-04-10T10:30:00' },
+    { id: 2, titulo: 'Festival de inverno movimenta o turismo', texto: 'O tradicional festival de inverno retorna com atrações nacionais e internacionais, esperando receber mais de 200 mil visitantes ao longo de 15 dias de evento com gastronomia, música e cultura local.', cidade_id: 2, data_criacao: '2025-04-08T14:00:00' },
+    { id: 3, titulo: 'Praia de Ipanema recebe premiação ambiental', texto: 'A icônica praia carioca recebeu o selo internacional de qualidade ambiental após um ano de iniciativas de limpeza e preservação da faixa de areia e do mar, consolidando o Rio como referência em sustentabilidade costeira.', cidade_id: 3, data_criacao: '2025-04-05T09:15:00' }
+  ],
+  nextId: { uf: 4, cidade: 5, noticia: 4 }
+};
+
+function save() { localStorage.setItem('newsdb', JSON.stringify(data)); }
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.className = 'toast', 2800);
+}
+
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('visible'));
+  document.getElementById('page-' + id).classList.add('visible');
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  if (id === 'noticias') renderNoticias();
+  if (id === 'estados') renderUFs();
+  if (id === 'cidades') { populateFilterUF(); renderCidades(); }
+  if (id === 'cadastrar') populateCidadeSelect();
+  if (id === 'form-cidade') populateUFSelect('cidade-uf');
+}
+
+function getUFById(id) { return data.ufs.find(u => u.id === id); }
+function getCidadeById(id) { return data.cidades.find(c => c.id === id); }
+
+function formatDate(d) {
+  return new Date(d).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+function renderNoticias() {
+  const filterUF = document.getElementById('filter-uf').value;
+  const order = document.getElementById('filter-order').value;
+  const group = document.getElementById('filter-group').value;
+  const container = document.getElementById('news-list');
+
+  populateFilterUFSelect('filter-uf');
+
+  let items = data.noticias.map(n => {
+    const cidade = getCidadeById(n.cidade_id);
+    const uf = cidade ? getUFById(cidade.uf_id) : null;
+    return { ...n, cidade_nome: cidade?.nome || '—', uf_sigla: uf?.sigla || '—', uf_id: uf?.id };
+  });
+
+  if (filterUF) items = items.filter(n => String(n.uf_id) === filterUF);
+  items.sort((a, b) => order === 'recente'
+    ? new Date(b.data_criacao) - new Date(a.data_criacao)
+    : new Date(a.data_criacao) - new Date(b.data_criacao));
+
+  renderStats(items);
+
+  if (items.length === 0) {
+    container.innerHTML = `<div class="empty-state"><p>Nenhuma notícia encontrada.</p></div>`;
+    return;
+  }
+
+  if (group === 'agrupado') {
+    const grouped = {};
+    items.forEach(n => { if (!grouped[n.uf_sigla]) grouped[n.uf_sigla] = []; grouped[n.uf_sigla].push(n); });
+    container.innerHTML = Object.entries(grouped).map(([uf, ns]) => `
+      <div class="section-group">
+        <div class="section-group-title">${uf} <span class="badge-count" style="background:rgba(255,255,255,0.2);color:#fff">${ns.length}</span></div>
+        ${ns.map(n => cardHTML(n)).join('')}
+      </div>`).join('');
+  } else {
+    container.innerHTML = items.map(n => cardHTML(n)).join('');
+  }
+}
+
+function cardHTML(n) {
+  return `<div class="card" id="card-${n.id}">
+    <div class="card-meta">
+      <span class="tag tag-uf">${n.uf_sigla}</span>
+      <span class="tag">${n.cidade_nome}</span>
+      <span class="card-date">${formatDate(n.data_criacao)}</span>
+    </div>
+    <div class="card-title">${esc(n.titulo)}</div>
+    <div class="card-text collapsed" id="text-${n.id}">${esc(n.texto)}</div>
+    <button class="read-more" onclick="toggleText(${n.id}, this)">Ler mais</button>
+  </div>`;
+}
+
+function toggleText(id, btn) {
+  const el = document.getElementById('text-' + id);
+  const collapsed = el.classList.toggle('collapsed');
+  btn.textContent = collapsed ? 'Ler mais' : 'Ler menos';
+}
+
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderStats(items) {
+  const bar = document.getElementById('stat-bar');
+  const ufsSet = new Set(items.map(n => n.uf_sigla));
+  bar.innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total de notícias</div><div class="stat-value">${items.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Estados cobertos</div><div class="stat-value">${ufsSet.size}</div></div>
+    <div class="stat-card"><div class="stat-label">Cidades cadastradas</div><div class="stat-value">${data.cidades.length}</div></div>
+  `;
+}
+
+function renderUFs() {
+  const container = document.getElementById('uf-list');
+  if (data.ufs.length === 0) {
+    container.innerHTML = `<div class="empty-state"><p>Nenhum estado cadastrado.</p></div>`;
+    return;
+  }
+  container.innerHTML = data.ufs.map(u => {
+    const count = data.cidades.filter(c => c.uf_id === u.id).length;
+    return `<div class="card" style="display:flex;align-items:center;gap:12px">
+      <div style="width:48px;height:48px;border-radius:10px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0">${u.sigla}</div>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:15px;color:var(--navy)">${esc(u.nome)}</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:2px">${count} cidade${count !== 1 ? 's' : ''} cadastrada${count !== 1 ? 's' : ''}</div>
+      </div>
+      <span class="tag">${u.sigla}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderCidades() {
+  const filterUF = document.getElementById('filter-cidades-uf')?.value || '';
+  const container = document.getElementById('cidade-list');
+  let cidades = data.cidades.map(c => {
+    const uf = getUFById(c.uf_id);
+    return { ...c, uf_nome: uf?.nome || '—', uf_sigla: uf?.sigla || '—' };
+  });
+  if (filterUF) cidades = cidades.filter(c => String(c.uf_id) === filterUF);
+  if (cidades.length === 0) {
+    container.innerHTML = `<div class="empty-state"><p>Nenhuma cidade encontrada.</p></div>`;
+    return;
+  }
+  container.innerHTML = cidades.map(c => `
+    <div class="card" style="display:flex;align-items:center;gap:12px">
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:15px;color:var(--navy)">${esc(c.nome)}</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:2px">${esc(c.uf_nome)}</div>
+      </div>
+      <span class="tag tag-uf">${c.uf_sigla}</span>
+    </div>`).join('');
+}
+
+function populateFilterUFSelect(id) {
+  const el = document.getElementById(id);
+  const val = el.value;
+  el.innerHTML = '<option value="">Todos os estados</option>' +
+    data.ufs.map(u => `<option value="${u.id}">${u.sigla} – ${u.nome}</option>`).join('');
+  el.value = val;
+}
+
+function populateFilterUF() {
+  const el = document.getElementById('filter-cidades-uf');
+  el.innerHTML = '<option value="">Todos os estados</option>' +
+    data.ufs.map(u => `<option value="${u.id}">${u.sigla} – ${u.nome}</option>`).join('');
+}
+
+function populateCidadeSelect() {
+  const el = document.getElementById('noticia-cidade');
+  if (data.cidades.length === 0) {
+    el.innerHTML = '<option value="">Nenhuma cidade cadastrada</option>';
+    return;
+  }
+  el.innerHTML = data.cidades.map(c => {
+    const uf = getUFById(c.uf_id);
+    return `<option value="${c.id}">${c.nome} (${uf?.sigla || '?'})</option>`;
+  }).join('');
+}
+
+function populateUFSelect(id) {
+  const el = document.getElementById(id);
+  el.innerHTML = data.ufs.length === 0
+    ? '<option value="">Nenhuma UF cadastrada</option>'
+    : data.ufs.map(u => `<option value="${u.id}">${u.nome} – ${u.sigla}</option>`).join('');
+}
+
+function salvarNoticia() {
+  const cidade_id = parseInt(document.getElementById('noticia-cidade').value);
+  const titulo = document.getElementById('noticia-titulo').value.trim();
+  const texto = document.getElementById('noticia-texto').value.trim();
+  if (!titulo || !texto || !cidade_id) { showToast('Preencha todos os campos.', 'error'); return; }
+  data.noticias.push({ id: data.nextId.noticia++, titulo, texto, cidade_id, data_criacao: new Date().toISOString() });
+  save();
+  document.getElementById('noticia-titulo').value = '';
+  document.getElementById('noticia-texto').value = '';
+  showToast('Notícia publicada com sucesso!', 'success');
+  showPage('noticias', document.querySelector('nav button'));
+}
+
+function salvarUF() {
+  const nome = document.getElementById('uf-nome').value.trim();
+  const sigla = document.getElementById('uf-sigla').value.trim().toUpperCase();
+  if (!nome || !sigla) { showToast('Preencha nome e sigla.', 'error'); return; }
+  if (data.ufs.find(u => u.sigla === sigla)) { showToast(`Já existe uma UF com a sigla "${sigla}".`, 'error'); return; }
+  data.ufs.push({ id: data.nextId.uf++, nome, sigla });
+  save();
+  document.getElementById('uf-nome').value = '';
+  document.getElementById('uf-sigla').value = '';
+  showToast(`UF "${sigla}" cadastrada!`, 'success');
+  showPage('estados', null);
+  renderUFs();
+}
+
+function salvarCidade() {
+  const uf_id = parseInt(document.getElementById('cidade-uf').value);
+  const nome = document.getElementById('cidade-nome').value.trim();
+  if (!nome || !uf_id) { showToast('Preencha todos os campos.', 'error'); return; }
+  data.cidades.push({ id: data.nextId.cidade++, nome, uf_id });
+  save();
+  document.getElementById('cidade-nome').value = '';
+  showToast(`Cidade "${nome}" cadastrada!`, 'success');
+  showPage('cidades', null);
+}
+
+populateFilterUFSelect('filter-uf');
+renderNoticias();
+</script>
+</body>
+</html>
